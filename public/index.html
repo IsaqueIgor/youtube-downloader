@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎥 YouTube Downloader</h1>
+            <p>Download videos locally using yt-dlp</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="input-group">
+                    <input type="url" id="urlInput" placeholder="Paste YouTube URL here..." required>
+                    <button id="fetchFormats" type="button">Get Formats</button>
+                </div>
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <span>Fetching video information...</span>
+                </div>
+            </section>
+
+            <section id="videoInfo" class="video-info hidden">
+                <h2 id="videoTitle"></h2>
+                <div class="formats-container">
+                    <h3>Available Formats</h3>
+                    <div class="format-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="video">Video + Audio</button>
+                        <button class="filter-btn" data-filter="video-only">Video Only</button>
+                        <button class="filter-btn" data-filter="audio-only">Audio Only</button>
+                    </div>
+                    <div id="formatsList" class="formats-list"></div>
+                </div>
+            </section>
+
+            <section id="downloads" class="downloads-section">
+                <h3>Recent Downloads</h3>
+                <div id="downloadsList" class="downloads-list"></div>
+            </section>
+        </main>
+
+        <div id="notification" class="notification hidden"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
