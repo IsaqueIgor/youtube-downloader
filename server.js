@@ -26,6 +26,15 @@ function checkYtDlp() {
     });
 }
 
+// Check if ffmpeg is installed
+function checkFfmpeg() {
+    return new Promise((resolve) => {
+        exec('ffmpeg -version', (error) => {
+            resolve(!error);
+        });
+    });
+}
+
 // Helper function to format seconds to time string for filename
 function formatSecondsToTime(seconds) {
     const hours = Math.floor(seconds / 3600);
@@ -121,11 +130,22 @@ app.post('/api/formats', async (req, res) => {
 });
 
 // Download video
-app.post('/api/download', (req, res) => {
+app.post('/api/download', async (req, res) => {
     const { url, format_id, title, start_time, end_time } = req.body;
     
     if (!url || !format_id) {
         return res.status(400).json({ error: 'URL and format_id are required' });
+    }
+
+    // Check if ffmpeg is required and available
+    const isSegmentDownload = start_time !== undefined && end_time !== undefined;
+    if (isSegmentDownload) {
+        const ffmpegAvailable = await checkFfmpeg();
+        if (!ffmpegAvailable) {
+            return res.status(500).json({ 
+                error: 'ffmpeg is required for segment downloads. Please install it: brew install ffmpeg' 
+            });
+        }
     }
 
     // Create filename with segment info if applicable
