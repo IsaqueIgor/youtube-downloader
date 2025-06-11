@@ -27,6 +27,34 @@
 
             <section id="videoInfo" class="video-info hidden">
                 <h2 id="videoTitle"></h2>
+                
+                <div class="time-selection">
+                    <h3>📝 Download Options</h3>
+                    <div class="download-mode">
+                        <label class="radio-option">
+                            <input type="radio" name="downloadMode" value="full" checked>
+                            <span>Download full video</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="downloadMode" value="segment">
+                            <span>Download specific segment</span>
+                        </label>
+                    </div>
+                    
+                    <div id="timeInputs" class="time-inputs hidden">
+                        <div class="time-group">
+                            <label for="startTime">Start Time</label>
+                            <input type="text" id="startTime" placeholder="1:04 or 64" title="Format: MM:SS or seconds">
+                            <small>Format: 1:04 or 64 (seconds)</small>
+                        </div>
+                        <div class="time-group">
+                            <label for="endTime">End Time</label>
+                            <input type="text" id="endTime" placeholder="1:45 or 105" title="Format: MM:SS or seconds">
+                            <small>Format: 1:45 or 105 (seconds)</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="formats-container">
                     <h3>Available Formats</h3>
                     <div class="format-filters">

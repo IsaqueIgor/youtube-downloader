@@ -6,6 +6,7 @@ A local YouTube video downloader tool built with Node.js, Express, and yt-dlp. D
 
 - 🎯 Simple URL input interface
 - 📊 Fetch all available video/audio formats
+- ✂️ **Download video segments** - Choose specific time ranges (e.g., 1:04 to 1:45)
 - 🎨 Filter formats by type (Video+Audio, Video Only, Audio Only)
 - 📱 Responsive modern UI
 - 💾 Local downloads management
@@ -48,19 +49,27 @@ A local YouTube video downloader tool built with Node.js, Express, and yt-dlp. D
 
 1. **Paste YouTube URL** - Any valid YouTube URL (youtube.com or youtu.be)
 2. **Get Formats** - Click to fetch all available download formats
-3. **Choose Quality** - Use filters to find your preferred format:
+3. **Choose Download Mode**:
+   - **Download full video** - Get the complete video
+   - **Download specific segment** - Select start and end times (e.g., 1:04 to 1:45)
+4. **Set Time Range** (if downloading segment):
+   - **Start Time**: Enter in format `1:04` or `64` (seconds)
+   - **End Time**: Enter in format `1:45` or `105` (seconds)
+5. **Choose Quality** - Use filters to find your preferred format:
    - **All** - Shows all available formats
    - **Video + Audio** - Complete video files with audio
    - **Video Only** - Video without audio (useful for specific quality needs)
    - **Audio Only** - Audio-only files (MP3, M4A, etc.)
-4. **Download** - Click download on your chosen format
-5. **Access Files** - Downloaded files appear in the "Recent Downloads" section
+6. **Download** - Click download on your chosen format
+7. **Access Files** - Downloaded files appear in the "Recent Downloads" section
 
 ## API Endpoints
 
 - `POST /api/formats` - Get available formats for a YouTube URL
 - `POST /api/download` - Download a specific format
-- `GET /api/downloads` - List downloaded files
+  - **Parameters**: `url`, `format_id`, `title`, `start_time` (optional), `end_time` (optional)
+  - **Segment Download**: Include `start_time` and `end_time` in seconds for partial downloads
+- `GET /api/downloads` - List downloaded files  
 - `GET /downloads/:filename` - Serve downloaded files
 
 ## File Structure

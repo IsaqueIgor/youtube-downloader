@@ -17,6 +17,10 @@ class YouTubeDownloader {
         this.downloadsList = document.getElementById('downloadsList');
         this.notification = document.getElementById('notification');
         this.filterButtons = document.querySelectorAll('.filter-btn');
+        this.downloadModeRadios = document.querySelectorAll('input[name="downloadMode"]');
+        this.timeInputs = document.getElementById('timeInputs');
+        this.startTimeInput = document.getElementById('startTime');
+        this.endTimeInput = document.getElementById('endTime');
     }
 
     attachEventListeners() {
@@ -31,6 +35,13 @@ class YouTubeDownloader {
                 this.filterButtons.forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.filterFormats(e.target.dataset.filter);
+            });
+        });
+
+        // Download mode toggle
+        this.downloadModeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.toggleTimeInputs(e.target.value === 'segment');
             });
         });
     }
@@ -163,8 +174,39 @@ class YouTubeDownloader {
         });
     }
 
+    toggleTimeInputs(show) {
+        this.timeInputs.classList.toggle('hidden', !show);
+    }
+
     async downloadFormat(formatId) {
         if (!this.currentVideo) return;
+
+        // Get download mode and time parameters
+        const downloadMode = document.querySelector('input[name="downloadMode"]:checked').value;
+        const downloadParams = {
+            url: this.currentVideo.url,
+            format_id: formatId,
+            title: this.currentVideo.title
+        };
+
+        if (downloadMode === 'segment') {
+            const startTime = this.startTimeInput.value.trim();
+            const endTime = this.endTimeInput.value.trim();
+
+            if (!startTime || !endTime) {
+                this.showNotification('Please enter both start and end times', 'error');
+                return;
+            }
+
+            const timeValidation = this.validateTimeInputs(startTime, endTime);
+            if (!timeValidation.valid) {
+                this.showNotification(timeValidation.error, 'error');
+                return;
+            }
+
+            downloadParams.start_time = timeValidation.startSeconds;
+            downloadParams.end_time = timeValidation.endSeconds;
+        }
 
         this.showNotification('Starting download...');
 
@@ -174,11 +216,7 @@ class YouTubeDownloader {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    url: this.currentVideo.url,
-                    format_id: formatId,
-                    title: this.currentVideo.title
-                })
+                body: JSON.stringify(downloadParams)
             });
 
             const data = await response.json();
@@ -187,7 +225,11 @@ class YouTubeDownloader {
                 throw new Error(data.error || 'Download failed');
             }
 
-            this.showNotification('Download completed!');
+            const message = downloadMode === 'segment' 
+                ? `Segment download completed! (${this.formatTime(downloadParams.start_time)} - ${this.formatTime(downloadParams.end_time)})`
+                : 'Download completed!';
+            
+            this.showNotification(message);
             this.loadDownloads(); // Refresh downloads list
 
         } catch (error) {
@@ -265,6 +307,63 @@ class YouTubeDownloader {
         
         const i = Math.floor(Math.log(num) / Math.log(1024));
         return Math.round(num / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    parseTimeToSeconds(timeStr) {
+        // Handle MM:SS format or plain seconds
+        if (timeStr.includes(':')) {
+            const parts = timeStr.split(':');
+            if (parts.length === 2) {
+                const minutes = parseInt(parts[0]) || 0;
+                const seconds = parseInt(parts[1]) || 0;
+                return minutes * 60 + seconds;
+            } else if (parts.length === 3) {
+                const hours = parseInt(parts[0]) || 0;
+                const minutes = parseInt(parts[1]) || 0;
+                const seconds = parseInt(parts[2]) || 0;
+                return hours * 3600 + minutes * 60 + seconds;
+            }
+        } else {
+            // Plain seconds
+            const seconds = parseInt(timeStr);
+            return isNaN(seconds) ? 0 : seconds;
+        }
+        return 0;
+    }
+
+    formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+    }
+
+    validateTimeInputs(startTime, endTime) {
+        const startSeconds = this.parseTimeToSeconds(startTime);
+        const endSeconds = this.parseTimeToSeconds(endTime);
+
+        if (startSeconds <= 0) {
+            return { valid: false, error: 'Start time must be greater than 0' };
+        }
+
+        if (endSeconds <= 0) {
+            return { valid: false, error: 'End time must be greater than 0' };
+        }
+
+        if (startSeconds >= endSeconds) {
+            return { valid: false, error: 'End time must be greater than start time' };
+        }
+
+        return { 
+            valid: true, 
+            startSeconds: startSeconds, 
+            endSeconds: endSeconds 
+        };
     }
 }
 

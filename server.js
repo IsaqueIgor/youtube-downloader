@@ -26,6 +26,19 @@ function checkYtDlp() {
     });
 }
 
+// Helper function to format seconds to time string for filename
+function formatSecondsToTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+        return `${hours}h${minutes.toString().padStart(2, '0')}m${secs.toString().padStart(2, '0')}s`;
+    } else {
+        return `${minutes}m${secs.toString().padStart(2, '0')}s`;
+    }
+}
+
 // Get video formats
 app.post('/api/formats', async (req, res) => {
     const { url } = req.body;
@@ -109,21 +122,38 @@ app.post('/api/formats', async (req, res) => {
 
 // Download video
 app.post('/api/download', (req, res) => {
-    const { url, format_id, title } = req.body;
+    const { url, format_id, title, start_time, end_time } = req.body;
     
     if (!url || !format_id) {
         return res.status(400).json({ error: 'URL and format_id are required' });
     }
 
-    const filename = `${title || 'video'}_${format_id}.%(ext)s`;
+    // Create filename with segment info if applicable
+    let baseFilename = title || 'video';
+    if (start_time && end_time) {
+        const startStr = formatSecondsToTime(start_time);
+        const endStr = formatSecondsToTime(end_time);
+        baseFilename += `_${startStr}-${endStr}`;
+    }
+    const filename = `${baseFilename}_${format_id}.%(ext)s`;
     const outputPath = path.join(downloadsDir, filename);
 
-    const ytDlp = spawn('yt-dlp', [
+    // Build yt-dlp arguments
+    const ytDlpArgs = [
         '-f', format_id,
         '-o', outputPath,
-        '--no-warnings',
-        url
-    ]);
+        '--no-warnings'
+    ];
+
+    // Add download sections for time-based segments
+    if (start_time !== undefined && end_time !== undefined) {
+        const sectionString = `*${start_time}-${end_time}`;
+        ytDlpArgs.push('--download-sections', sectionString);
+    }
+
+    ytDlpArgs.push(url);
+
+    const ytDlp = spawn('yt-dlp', ytDlpArgs);
 
     let progress = '';
     
